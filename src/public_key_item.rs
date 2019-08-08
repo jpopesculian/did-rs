@@ -29,16 +29,16 @@ pub struct PublicKeyItem {
 
 impl PublicKeyItem {
     pub fn new(
-        controller: String,
-        id: String,
+        controller: &str,
+        id: &str,
         key_type: PublicKeyItemType,
-        key_bytes: Vec<u8>,
+        key_bytes: &[u8],
         key_format: PublicKeyItemFormat,
     ) -> Self {
         PublicKeyItem {
-            controller,
-            id,
-            key_bytes,
+            controller: controller.to_owned(),
+            id: id.to_owned(),
+            key_bytes: key_bytes.to_vec(),
             key_format,
             key_type,
         }
@@ -75,6 +75,7 @@ impl<'de> Deserialize<'de> for PublicKeyItem {
         #[derive(Deserialize)]
         #[serde(field_identifier, rename_all = "camelCase")]
         enum Field {
+            #[serde(alias = "@id")]
             Id,
             Type,
             Controller,
@@ -162,7 +163,7 @@ impl<'de> Deserialize<'de> for PublicKeyItem {
                 let key_format = key_format
                     .ok_or_else(|| de::Error::custom("key_format should be autofilled"))?;
                 Ok(PublicKeyItem::new(
-                    controller, id, key_type, key_bytes, key_format,
+                    controller, id, key_type, &key_bytes, key_format,
                 ))
             }
         }

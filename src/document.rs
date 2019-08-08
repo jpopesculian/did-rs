@@ -14,10 +14,10 @@ pub struct DecentralizedIdentifierDocument {
 }
 
 impl DecentralizedIdentifierDocument {
-    pub fn new(id: String) -> Self {
+    pub fn new(id: &str) -> Self {
         DecentralizedIdentifierDocument {
             context: DID_CONTEXT.to_owned(),
-            id,
+            id: id.to_owned(),
             public_key: vec![],
         }
     }
