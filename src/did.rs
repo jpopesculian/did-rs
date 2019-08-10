@@ -1,19 +1,8 @@
+use crate::regexes::DID_REGEX;
+use core::ops::Index;
 use regex::Regex;
 
-const DID_REGEX: &str = r"(?x)
-^did:                   # start protocol
-(?P<method>
-    [a-z0-9]            # method-char        = %x61-7A / DIGIT
-    +                   # method-name        = 1*method-char
-):
-(?P<ids>
-    (?::?
-        [A-Za-z0-9\.-_] # idchar             = ALPHA / DIGIT / . / - / _
-    *)*                 # method-specific-id = *idchar *( : *idchar )
-)$                      # end
-";
-
-#[derive(Default, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct DecentralizedIdentifer {
     method: String,
     identifiers: Vec<String>,
@@ -23,7 +12,7 @@ impl DecentralizedIdentifer {
     pub fn new(method: &str) -> Self {
         DecentralizedIdentifer {
             method: method.to_owned(),
-            ..DecentralizedIdentifer::default()
+            identifiers: vec![],
         }
     }
 
@@ -33,15 +22,30 @@ impl DecentralizedIdentifer {
         self
     }
 
+    pub fn remove_identifier(mut self, identifier: &str) -> Self {
+        self.identifiers.retain(|id| id != identifier);
+        self
+    }
+
     pub fn decode(input: &str) -> Self {
         lazy_static! {
-            static ref RE: Regex = Regex::new(DID_REGEX).unwrap();
+            static ref RE: Regex = Regex::new(&format!("^{}$", DID_REGEX)).unwrap();
         }
+        DecentralizedIdentifer::from_map(&RE.captures(input).unwrap())
+    }
+
+    pub fn from_map<'a, M>(input: &M) -> Self
+    where
+        M: Index<&'static str, Output = str>, // TODO more inclusive output
+    {
         // TODO graceful error handling
-        let caps = RE.captures(input).unwrap();
+        let identifiers: Vec<String> = match &input["ids"] {
+            ":" => vec![],
+            ids => ids.split(':').skip(1).map(|id| id.to_owned()).collect(),
+        };
         DecentralizedIdentifer {
-            method: caps["method"].to_owned(),
-            identifiers: caps["ids"].split(':').map(|id| id.to_owned()).collect(),
+            method: input["method"].to_owned(),
+            identifiers,
         }
     }
 

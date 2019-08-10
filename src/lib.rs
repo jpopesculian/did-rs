@@ -10,7 +10,10 @@ extern crate serde_json;
 pub mod did;
 pub mod document;
 pub mod public_key_item;
+mod regexes;
+pub mod url;
 
 pub use did::DecentralizedIdentifer;
 pub use document::DecentralizedIdentifierDocument;
 pub use public_key_item::{PublicKeyItem, PublicKeyItemFormat, PublicKeyItemType};
+pub use url::DecentralizedIdentiferUrl;
