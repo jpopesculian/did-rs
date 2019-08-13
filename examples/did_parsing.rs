@@ -5,6 +5,7 @@ use did::DecentralizedIdentifer;
 fn main() {
     let id = DecentralizedIdentifer::new("method")
         .add_identifier("example123")
+        .add_identifier("exam.pl-e12_3")
         .add_identifier("example456");
     println!("{:#?}", id);
     println!("\n-- encoded --\n");

@@ -12,6 +12,7 @@ pub mod document;
 pub mod public_key_item;
 mod regexes;
 pub mod url;
+mod utils;
 
 pub use did::DecentralizedIdentifer;
 pub use document::DecentralizedIdentifierDocument;

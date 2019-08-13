@@ -34,7 +34,7 @@ impl DecentralizedIdentifer {
         DecentralizedIdentifer::from_map(&RE.captures(input).unwrap())
     }
 
-    pub fn from_map<'a, M>(input: &M) -> Self
+    pub fn from_map<M>(input: &M) -> Self
     where
         M: Index<&'static str, Output = str>, // TODO more inclusive output
     {
