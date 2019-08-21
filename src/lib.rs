@@ -8,13 +8,13 @@ extern crate serde;
 extern crate serde_json;
 
 pub mod did;
-pub mod document;
+pub mod did_document;
+pub mod did_url;
+mod parsing;
 pub mod public_key_item;
-mod regexes;
-pub mod url;
 mod utils;
 
-pub use did::DecentralizedIdentifer;
-pub use document::DecentralizedIdentifierDocument;
-pub use public_key_item::{PublicKeyItem, PublicKeyItemFormat, PublicKeyItemType};
-pub use url::DecentralizedIdentiferUrl;
+pub use crate::did::DecentralizedIdentifer;
+pub use crate::did_document::DecentralizedIdentifierDocument;
+pub use crate::did_url::DecentralizedIdentiferUrl;
+pub use crate::public_key_item::{PublicKeyItem, PublicKeyItemFormat, PublicKeyItemType};

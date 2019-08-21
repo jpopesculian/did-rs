@@ -7,7 +7,10 @@ fn main() {
         .add_identifier("example123")
         .add_identifier("example456");
     let did = id.encode();
-    let url = format!("{};cool;param:name=1;done=now?cool=1&what#a-fragment", did);
+    let url = format!(
+        "{};cool;param:name=1;done=now/hello/world/?cool=1&what#a-fragment",
+        did
+    );
     println!("{}", url);
     println!("{:#?}", DecentralizedIdentiferUrl::decode(&url));
 }
