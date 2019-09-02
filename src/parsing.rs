@@ -4,6 +4,7 @@ use crate::did_url::{
     DecentralizedIdentiferUrl,
 };
 use crate::utils::empty_to_none;
+use crate::{Error, Result};
 use regex::{Captures, Regex};
 
 pub const DID_REGEX: &str = r"(?x)
@@ -64,27 +65,31 @@ pub const PATH_PARAM_REGEX: &str = r"(?x)
 ";
 
 impl DecentralizedIdentifer {
-    pub fn decode(input: &str) -> Self {
+    pub fn decode(input: &str) -> Result<Self> {
         lazy_static! {
             static ref RE: Regex = Regex::new(&format!("^{}$", DID_REGEX)).unwrap();
         }
         DecentralizedIdentifer::from_captures(&RE.captures(input).unwrap())
     }
 
-    fn from_captures(input: &Captures) -> Self {
-        let did = DecentralizedIdentifer::new(&input["method"]);
-        match &input["ids"] {
+    fn from_captures(input: &Captures) -> Result<Self> {
+        let did = if let Some(method) = input.name("method") {
+            DecentralizedIdentifer::new(method.as_str())
+        } else {
+            return Err(Error::CouldNotParse("no method".into()));
+        };
+        Ok(match &input["ids"] {
             ":" => did,
             ids => ids
                 .split(':')
                 .skip(1)
                 .fold(did, |did, id| did.add_identifier(id)),
-        }
+        })
     }
 }
 
 impl DecentralizedIdentiferUrl {
-    pub fn decode(input: &str) -> Self {
+    pub fn decode(input: &str) -> Result<Self> {
         lazy_static! {
             static ref RE: Regex = Regex::new(&format!(
                 r"(?x)^
@@ -109,38 +114,52 @@ impl DecentralizedIdentiferUrl {
         DecentralizedIdentiferUrl::from_captures(&caps)
     }
 
-    pub fn from_captures(input: &Captures) -> Self {
-        let mut url = DecentralizedIdentiferUrl::new(DecentralizedIdentifer::from_captures(input));
-        url.set_params(DecentralizedIdentiferParams::decode(&input["params"], ';'));
-        url.set_path(DecentralizedIdentiferPath::from_captures(input));
-        url
+    pub fn from_captures(input: &Captures) -> Result<Self> {
+        let mut url = DecentralizedIdentiferUrl::new(DecentralizedIdentifer::from_captures(input)?);
+        if let Some(params) = input.name("params") {
+            url.set_params(DecentralizedIdentiferParams::decode(params.as_str(), ';')?);
+        }
+        url.set_path(DecentralizedIdentiferPath::from_captures(input)?);
+        Ok(url)
     }
 }
 
 impl DecentralizedIdentiferPath {
-    pub fn from_captures(input: &Captures) -> Self {
+    pub fn from_captures(input: &Captures) -> Result<Self> {
         let mut path = DecentralizedIdentiferPath::default();
-        path.set_path(empty_to_none(Some(input["path"].to_owned())));
-        path.set_params(DecentralizedIdentiferParams::decode(&input["query"], '&'));
-        path.set_fragment(empty_to_none(Some(input["fragment"].to_owned())));
-        path
+        path.set_path(empty_to_none(
+            input.name("path").map(|p| p.as_str().to_owned()),
+        ));
+        if let Some(query) = input.name("query") {
+            path.set_params(DecentralizedIdentiferParams::decode(query.as_str(), '&')?);
+        }
+        path.set_fragment(empty_to_none(
+            input.name("fragment").map(|f| f.as_str().to_owned()),
+        ));
+        Ok(path)
     }
 }
 
 impl DecentralizedIdentiferParams {
-    pub fn decode(input: &str, separator: char) -> Self {
-        let mut params = DecentralizedIdentiferParams::default();
+    pub fn decode(input: &str, separator: char) -> Result<Self> {
+        let params = DecentralizedIdentiferParams::default();
         input
             .split(separator)
             .filter(|s| !s.is_empty())
             .map(DecentralizedIdentiferParam::decode)
-            .for_each(|param| params.add_param(param));
-        params
+            .fold(Ok(params), |res, param| {
+                param.and_then(|param| {
+                    res.and_then(|mut params| {
+                        params.add_param(param);
+                        Ok(params)
+                    })
+                })
+            })
     }
 }
 
 impl DecentralizedIdentiferParam {
-    pub fn decode(input: &str) -> Self {
+    pub fn decode(input: &str) -> Result<Self> {
         lazy_static! {
             static ref RE: Regex = Regex::new(&format!("^{}$", DID_URL_PARAM_REGEX)).unwrap();
         }
@@ -148,7 +167,13 @@ impl DecentralizedIdentiferParam {
         DecentralizedIdentiferParam::from_captures(&caps)
     }
 
-    pub fn from_captures(input: &Captures) -> Self {
-        DecentralizedIdentiferParam::new(&input["name"], empty_to_none(Some(&input["value"])))
+    pub fn from_captures(input: &Captures) -> Result<Self> {
+        let name = if let Some(name) = input.name("name") {
+            name.as_str()
+        } else {
+            return Err(Error::CouldNotParse("param has no name".to_owned()));
+        };
+        let value = empty_to_none(input.name("value").map(|x| x.as_str()));
+        Ok(DecentralizedIdentiferParam::new(name, value))
     }
 }
