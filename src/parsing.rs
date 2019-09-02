@@ -150,7 +150,7 @@ impl DecentralizedIdentiferParams {
             .fold(Ok(params), |res, param| {
                 param.and_then(|param| {
                     res.and_then(|mut params| {
-                        params.add_param(param);
+                        params.push(param);
                         Ok(params)
                     })
                 })

@@ -1,4 +1,5 @@
 use crate::DecentralizedIdentifer;
+use core::ops::{Deref, DerefMut};
 
 #[derive(Clone, Debug)]
 pub struct DecentralizedIdentiferUrl {
@@ -58,10 +59,23 @@ impl DecentralizedIdentiferPath {
     }
 }
 
+impl Deref for DecentralizedIdentiferParams {
+    type Target = Vec<DecentralizedIdentiferParam>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for DecentralizedIdentiferParams {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 impl DecentralizedIdentiferParams {
-    pub fn add_param(&mut self, param: DecentralizedIdentiferParam) {
-        // TODO push functions should come from deref
-        self.0.push(param)
+    pub fn new() -> Self {
+        DecentralizedIdentiferParams::default()
     }
 }
 
