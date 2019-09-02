@@ -1,6 +1,7 @@
 use crate::did::DecentralizedIdentifer;
 use crate::did_url::{
-    DecentralizedIdentiferParam, DecentralizedIdentiferParams, DecentralizedIdentiferUrl,
+    DecentralizedIdentiferParam, DecentralizedIdentiferParams, DecentralizedIdentiferPath,
+    DecentralizedIdentiferUrl,
 };
 use crate::utils::empty_to_none;
 use regex::{Captures, Regex};
@@ -110,18 +111,28 @@ impl DecentralizedIdentiferUrl {
 
     pub fn from_captures(input: &Captures) -> Self {
         let mut url = DecentralizedIdentiferUrl::new(DecentralizedIdentifer::from_captures(input));
-        url.set_params(DecentralizedIdentiferParams::decode(&input["params"]));
-        url.set_path(empty_to_none(Some(input["url"].to_owned())));
+        url.set_params(DecentralizedIdentiferParams::decode(&input["params"], ';'));
+        url.set_path(DecentralizedIdentiferPath::from_captures(input));
         url
     }
 }
 
+impl DecentralizedIdentiferPath {
+    pub fn from_captures(input: &Captures) -> Self {
+        let mut path = DecentralizedIdentiferPath::default();
+        path.set_path(empty_to_none(Some(input["path"].to_owned())));
+        path.set_params(DecentralizedIdentiferParams::decode(&input["query"], '&'));
+        path.set_fragment(empty_to_none(Some(input["fragment"].to_owned())));
+        path
+    }
+}
+
 impl DecentralizedIdentiferParams {
-    pub fn decode(input: &str) -> Self {
+    pub fn decode(input: &str, separator: char) -> Self {
         let mut params = DecentralizedIdentiferParams::default();
         input
-            .split(';')
-            .skip(1)
+            .split(separator)
+            .filter(|s| !s.is_empty())
             .map(DecentralizedIdentiferParam::decode)
             .for_each(|param| params.add_param(param));
         params

@@ -4,7 +4,14 @@ use crate::DecentralizedIdentifer;
 pub struct DecentralizedIdentiferUrl {
     did: DecentralizedIdentifer,
     params: DecentralizedIdentiferParams,
+    path: DecentralizedIdentiferPath,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct DecentralizedIdentiferPath {
     path: Option<String>,
+    params: DecentralizedIdentiferParams,
+    fragment: Option<String>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -18,7 +25,7 @@ impl DecentralizedIdentiferUrl {
         DecentralizedIdentiferUrl {
             did,
             params: DecentralizedIdentiferParams::default(),
-            path: None,
+            path: DecentralizedIdentiferPath::default(),
         }
     }
 
@@ -26,8 +33,28 @@ impl DecentralizedIdentiferUrl {
         self.params = params;
     }
 
+    pub fn set_path(&mut self, path: DecentralizedIdentiferPath) {
+        self.path = path;
+    }
+}
+
+impl DecentralizedIdentiferPath {
+    pub fn new() -> Self {
+        DecentralizedIdentiferPath {
+            ..Default::default()
+        }
+    }
+
     pub fn set_path(&mut self, path: Option<String>) {
         self.path = path;
+    }
+
+    pub fn set_params(&mut self, params: DecentralizedIdentiferParams) {
+        self.params = params;
+    }
+
+    pub fn set_fragment(&mut self, fragment: Option<String>) {
+        self.fragment = fragment;
     }
 }
 
